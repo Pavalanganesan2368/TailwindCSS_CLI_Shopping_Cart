@@ -4,6 +4,11 @@ const totalCart = document.querySelector("#total-cart");
 const toggleCart = document.querySelector("#toggle-cart");
 const productCount = document.querySelector("#product-count");
 const toggleContainer = document.querySelector(".toggle-container");
+
+toggleCart.addEventListener("click", () => {
+  toggleContainer.classList.toggle("hidden");
+  console.log("Toggle Triggered");
+});
 const productClear = document.querySelector("#product-clear");
 
 const products = [
@@ -51,7 +56,7 @@ const products = [
   },
 ];
 
-let productCard = [];
+let productCard = JSON.parse(localStorage.getItem("Product")) || [];
 
 function productListRender() {
   products.forEach((product) => {
@@ -81,19 +86,25 @@ function productListRender() {
 }
 
 function productAdd(id) {
-  const product = products.find((product) => product.id === id);
+  const existingProduct = productCard.find((product) => product.id === id);
 
-  const productData = {
-    id: product.id,
-    name: product.name,
-    price: product.price,
-    productImage: product.productImageUrl,
-    quantity: 1,
-  };
+  if (existingProduct) {
+    existingProduct.quantity++;
+  } else {
+    const product = products.find((product) => product.id === id);
 
-  productCard.push(productData);
-  console.log(productCard);
+    const productData = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      productImage: product.productImageUrl,
+      quantity: 1,
+    };
+
+    productCard.push(productData);
+  }
   productCount.innerHTML = productCard.length;
+  localStorage.setItem("Product", JSON.stringify(productCard));
   productRender();
   productCalculate();
 }
@@ -138,12 +149,7 @@ function productRender() {
   });
 }
 
-productClear.addEventListener("click", productRemove());
-
-toggleCart.addEventListener("click", () => {
-  toggleContainer.classList.toggle("hidden");
-  console.log("Toggle Triggered");
-});
+productClear.addEventListener("click", productRemove);
 
 function productCalculate() {
   const totalPrice = productCard.reduce(
@@ -151,11 +157,13 @@ function productCalculate() {
     0,
   );
   totalCart.innerHTML = `$${Number(totalPrice).toFixed(2)}`;
+  localStorage.setItem("Product", JSON.stringify(productCard));
 }
 
 function productIncrement(id) {
   const product = productCard.find((product) => product.id === id);
   product.quantity++;
+  localStorage.setItem("Product", JSON.stringify(productCard));
   productRender();
   productCalculate();
 }
@@ -166,7 +174,7 @@ function productDecrement(id) {
   if (product.quantity > 1) {
     product.quantity--;
   }
-
+  localStorage.setItem("Product", JSON.stringify(productCard));
   productRender();
   productCalculate();
 }
@@ -178,19 +186,24 @@ function inputQuantity(id, value) {
   if (product.quantity < 1 || isNaN(product.quantity)) {
     product.quantity = 1;
   }
-
+  localStorage.setItem("Product", JSON.stringify(productCard));
   productRender();
+  productCalculate();
 }
 
 function productDelete(id) {
   productCard = productCard.filter((product) => product.id !== id);
+  localStorage.setItem("Product", JSON.stringify(productCard));
   productCalculate();
   productRender();
 }
 
 function productRemove() {
   productCard = [];
-  productCart.innerHTML = "";
+  localStorage.setItem("Product", JSON.stringify(productCard));
+
+  productRender();
+  productCalculate();
 }
 
 productRender();
